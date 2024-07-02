@@ -1,25 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route} from 'react-router-dom';
-import MapComponent from './MapComponent';
-import StatsPage from './StatsPage';
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import MapComponent from './MapComponent'; // Assuming you have a MapComponent
+import StatsPage from './StatsPage'; // Assuming you have a StatsPage
 
-const App = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(() => JSON.parse(localStorage.getItem('isLoggedIn')) || false);
-
-  useEffect(() => {
-    localStorage.setItem('isLoggedIn', JSON.stringify(isLoggedIn));
-  }, [isLoggedIn]);
+function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   return (
-    <Router>
-      <div>
-        <Routes>
-          <Route path="/" element={<MapComponent setIsLoggedIn={setIsLoggedIn} isLoggedIn={isLoggedIn} />} />
-          <Route path="/stats" element={<StatsPage isLoggedIn={isLoggedIn} />} />
-        </Routes>
-      </div>
+    <Router basename="/map-pixel-app">
+      <Routes>
+        <Route exact path="/" element={<MapComponent setIsLoggedIn={setIsLoggedIn} isLoggedIn={isLoggedIn} />} />
+        <Route path="/stats" element={<StatsPage isLoggedIn={isLoggedIn} />} />
+        {/* Add other routes here */}
+      </Routes>
     </Router>
   );
-};
+}
 
 export default App;

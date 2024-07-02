@@ -10,6 +10,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 
 Modal.setAppElement('#root');
+const backendUrl = process.env.REACT_APP_BACKEND_URL;
 
 const mapContainerStyle = {
   height: '100vh',
@@ -140,38 +141,38 @@ const HoverLayer = ({ hoveredPixel, hoveredPixelData }) => {
 };
 
 const Timer = ({ nextAllowedTime }) => {
-    const calculateTimeLeft = useCallback(() => {
-      if (!nextAllowedTime) return null;
-      const now = new Date();
-      const timeLeft = new Date(nextAllowedTime) - now;
-      if (timeLeft <= 0) {
-        return null;
-      }
-      const hours = Math.floor(timeLeft / 1000 / 60 / 60);
-      const minutes = Math.floor((timeLeft / 1000 / 60) % 60);
-      const seconds = Math.floor((timeLeft / 1000) % 60);
-      return { hours, minutes, seconds };
-    }, [nextAllowedTime]);
-  
-    const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
-  
-    useEffect(() => {
-      const timer = setInterval(() => {
-        setTimeLeft(calculateTimeLeft());
-      }, 1000);
-      return () => clearInterval(timer);
-    }, [calculateTimeLeft]);
-  
-    if (!timeLeft) {
-      return <div className="timer">You can place a pixel now!</div>;
+  const calculateTimeLeft = useCallback(() => {
+    if (!nextAllowedTime) return null;
+    const now = new Date();
+    const timeLeft = new Date(nextAllowedTime) - now;
+    if (timeLeft <= 0) {
+      return null;
     }
-  
-    return (
-      <div className="timer">
-        Next pixel placement allowed in: {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s
-      </div>
-    );
-  };
+    const hours = Math.floor(timeLeft / 1000 / 60 / 60);
+    const minutes = Math.floor((timeLeft / 1000 / 60) % 60);
+    const seconds = Math.floor((timeLeft / 1000) % 60);
+    return { hours, minutes, seconds };
+  }, [nextAllowedTime]);
+
+  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [calculateTimeLeft]);
+
+  if (!timeLeft) {
+    return <div className="timer">You can place a pixel now!</div>;
+  }
+
+  return (
+    <div className="timer">
+      Next pixel placement allowed in: {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s
+    </div>
+  );
+};
 
 const popularCities = [
   { name: 'London', lat: 51.5074, lng: -0.1278 },
@@ -235,7 +236,7 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
   useEffect(() => {
     const fetchPixels = async () => {
       try {
-        const response = await fetch('http://0.0.0.0:50617/api/get_map');
+        const response = await fetch(`${backendUrl}/api/get_map`);
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -250,37 +251,38 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
     fetchPixels();
   }, []);
 
+
+
   useEffect(() => {
     if (isLoggedIn) {
       const fetchNextAllowedTime = async () => {
         try {
-          const response = await axios.get('http://0.0.0.0:50617/api/next_allowed_time', { withCredentials: true });
+          const response = await axios.get(`${backendUrl}/api/next_allowed_time`, { withCredentials: true });
           setNextAllowedTime(response.data.next_allowed_time);
         } catch (error) {
           console.error('Error fetching next allowed time:', error);
-          if (error.response && error.response.data && error.response.data.next_allowed_time) {
-            setNextAllowedTime(error.response.data.next_allowed_time);
-          }
         }
       };
   
       fetchNextAllowedTime();
     }
   }, [isLoggedIn]);
+  
+  
 
   const handleMapClick = (e) => {
     if (!isLoggedIn) {
       setIsModalOpen(true);
       return;
     }
-  
+
     if (zoomLevel < 18) return;
-  
+
     const lat = snapToGrid(e.latlng.lat);
     const lng = snapToGrid(e.latlng.lng);
     const newPixel = { lat, lng, color: selectedColor };
-  
-    axios.post('http://0.0.0.0:50617/api/update_pixels', { pixels: [newPixel] }, { withCredentials: true })
+
+    axios.post(`${backendUrl}/api/update_pixels`, { pixels: [newPixel] }, { withCredentials: true })
       .then((response) => {
         console.log('Pixel update response:', response.data);
         setPixels([...pixels, newPixel]);
@@ -325,7 +327,7 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
       return;
     }
 
-    const url = isRegistering ? 'http://0.0.0.0:50617/register' : 'http://0.0.0.0:50617/login';
+    const url = isRegistering ? `${backendUrl}/register` : `${backendUrl}/login`;
     const payload = { username, password, hcaptchaToken };
 
     axios.post(url, payload, { withCredentials: true })
@@ -352,7 +354,7 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
   };
 
   const handleLogout = () => {
-    axios.post('http://0.0.0.0:50617/logout', {}, { withCredentials: true })
+    axios.post(`${backendUrl}/logout`, {}, { withCredentials: true })
       .then((response) => {
         console.log('Logout response:', response.data);
         setIsLoggedIn(false);

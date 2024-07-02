@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import './StatsPage.css'; // Add some basic styling
@@ -16,7 +16,8 @@ const StatsPage = ({ isLoggedIn }) => {
 
     const fetchStats = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:5000/api/user_stats', { withCredentials: true });
+        const backendUrl = process.env.REACT_APP_BACKEND_URL;
+        const response = await axios.get(`${backendUrl}/api/user_stats`, { withCredentials: true });
         setStats(response.data);
       } catch (error) {
         console.error('Error fetching stats:', error);
@@ -57,7 +58,7 @@ const StatsPage = ({ isLoggedIn }) => {
       <h3>World Statistics</h3>
       <p>Total Pixels Placed in the World: {stats.totalWorldPixelsPlaced}</p>
       <p>Total Users with Pixels: {stats.totalUsersWithPixels}</p>
-      <p>Percentage of Pixels Placed Relative to the World: {stats.percentagePixelsPlaced.toFixed(10)}%</p>
+      <p>Percentage of Pixels Placed Relative to the World: {stats.percentagePixelsPlaced.toFixed(20)}%</p>
     </div>
   );
 };
