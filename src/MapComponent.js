@@ -40,7 +40,7 @@ const generateGridLines = (bounds) => {
   return lines;
 };
 
-const PixelLayer = ({ pixels }) => {
+const PixelLayer = ({ pixels, setHoveredPixelIndex }) => {
   return (
     <>
       {pixels.map((pixel, index) => (
@@ -51,8 +51,18 @@ const PixelLayer = ({ pixels }) => {
             [pixel.lat + GRID_SIZE, pixel.lng + GRID_SIZE],
           ]}
           pathOptions={{ color: pixel.color, weight: 1, fillOpacity: 1 }}
+          eventHandlers={{
+            mouseover: () => setHoveredPixelIndex(index),
+            mouseout: () => setHoveredPixelIndex(null),
+          }}
         >
-          <Tooltip direction="top" offset={[0, -10]} opacity={1}>
+          <Tooltip
+            direction="top"
+            offset={[0, -10]}
+            opacity={1}
+            permanent={false}
+            sticky={true}
+          >
             <span>{`User: ${pixel.username || 'Unknown'}, Placed: ${pixel.placed_at ? new Date(pixel.placed_at).toLocaleString() : 'Unknown'}`}</span>
           </Tooltip>
         </Rectangle>
@@ -61,7 +71,7 @@ const PixelLayer = ({ pixels }) => {
   );
 };
 
-const MarkerLayer = ({ pixels, zoomLevel }) => {
+const MarkerLayer = ({ pixels, setHoveredPixelIndex }) => {
   return (
     <>
       {pixels.map((pixel, index) => {
@@ -75,8 +85,18 @@ const MarkerLayer = ({ pixels, zoomLevel }) => {
             key={index}
             position={[pixel.lat, pixel.lng]}
             icon={customIcon}
+            eventHandlers={{
+              mouseover: () => setHoveredPixelIndex(index),
+              mouseout: () => setHoveredPixelIndex(null),
+            }}
           >
-            <Tooltip direction="top" offset={[0, -10]} opacity={1}>
+            <Tooltip
+              direction="top"
+              offset={[0, -10]}
+              opacity={1}
+              permanent={false}
+              sticky={true}
+            >
               <span>{`User: ${pixel.username || 'Unknown'}, Placed: ${pixel.placed_at ? new Date(pixel.placed_at).toLocaleString() : 'Unknown'}`}</span>
             </Tooltip>
           </Marker>
@@ -195,8 +215,7 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
   const [pixels, setPixels] = useState([]);
   const [selectedColor, setSelectedColor] = useState('#ff0000');
   const [zoomLevel, setZoomLevel] = useState(13);
-  const [hoveredPixel, setHoveredPixel] = useState(null);
-  const [hoveredPixelData, setHoveredPixelData] = useState({});
+  const [hoveredPixelIndex, setHoveredPixelIndex] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -305,18 +324,17 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
 
   const handleMouseMove = (e) => {
     if (zoomLevel < 18) {
-      setHoveredPixel(null);
+      setHoveredPixelIndex(null);
       return;
     }
 
     const lat = snapToGrid(e.latlng.lat);
     const lng = snapToGrid(e.latlng.lng);
-    setHoveredPixel({ lat, lng });
-    const pixelData = pixels.find(
+    const hoveredPixelIndex = pixels.findIndex(
       (pixel) =>
         snapToGrid(pixel.lat) === lat && snapToGrid(pixel.lng) === lng
     );
-    setHoveredPixelData(pixelData || {});
+    setHoveredPixelIndex(hoveredPixelIndex);
   };
 
   const handleAuthSubmit = (e) => {
@@ -409,11 +427,16 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
           attribution="&copy; OpenStreetMap contributors"
         />
         <MapEvents />
-        <PixelLayer pixels={pixels} />
-        <MarkerLayer pixels={pixels} zoomLevel={zoomLevel} />
+        <PixelLayer pixels={pixels} setHoveredPixelIndex={setHoveredPixelIndex} />
+        <MarkerLayer pixels={pixels} setHoveredPixelIndex={setHoveredPixelIndex} />
         <MapUpdater />
         {zoomLevel >= 18 && <GridLayer zoomLevel={zoomLevel} />}
-        {zoomLevel >= 18 && <HoverLayer hoveredPixel={hoveredPixel} hoveredPixelData={hoveredPixelData} />}
+        {hoveredPixelIndex !== null && zoomLevel >= 18 && (
+          <HoverLayer
+            hoveredPixel={pixels[hoveredPixelIndex]}
+            hoveredPixelData={pixels[hoveredPixelIndex]}
+          />
+        )}
       </MapContainer>
       {nextAllowedTime && isLoggedIn && <Timer nextAllowedTime={nextAllowedTime} />}
       <Modal isOpen={isModalOpen} onRequestClose={() => setIsModalOpen(false)} className="auth-modal">
