@@ -11,7 +11,7 @@ import L from 'leaflet';
 
 Modal.setAppElement('#root');
 const backendUrl = process.env.REACT_APP_BACKEND_URL;
-
+const hCaptchaSiteKey = process.env.REACT_APP_HCAPTCHA_SITE_KEY;
 const mapContainerStyle = {
   height: '100vh',
   width: '100vw',
@@ -464,7 +464,7 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
           </div>
           <div>
             <HCaptcha
-              sitekey="36c8fc9e-63d8-4378-a360-294489fc3842"
+              sitekey={hCaptchaSiteKey}
               onVerify={handleHcaptchaVerify}
             />
           </div>
