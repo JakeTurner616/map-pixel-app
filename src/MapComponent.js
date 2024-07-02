@@ -41,63 +41,63 @@ const generateGridLines = (bounds) => {
 };
 
 const PixelLayer = ({ pixels, setHoveredPixelIndex }) => {
-    return (
-      <>
-        {pixels.map((pixel, index) => (
-          <Rectangle
+  return (
+    <>
+      {pixels.map((pixel, index) => (
+        <Rectangle
+          key={index}
+          bounds={[
+            [pixel.lat, pixel.lng],
+            [pixel.lat + GRID_SIZE, pixel.lng + GRID_SIZE],
+          ]}
+          pathOptions={{ color: pixel.color, weight: 1, fillOpacity: 1 }}
+          eventHandlers={{
+            mouseover: () => setHoveredPixelIndex(index),
+            mouseout: () => setHoveredPixelIndex(null),
+          }}
+        >
+          <Tooltip
+            direction="top"
+            offset={[0, -10]}
+            opacity={1}
+            permanent={false}
+            sticky={true}
+          >
+            <span>{`User: ${pixel.username || 'Unknown'}, Placed: ${new Date(pixel.placed_at).toLocaleString()}`}</span>
+          </Tooltip>
+        </Rectangle>
+      ))}
+    </>
+  );
+};
+
+const MarkerLayer = ({ pixels, setHoveredPixelIndex }) => {
+  return (
+    <>
+      {pixels.map((pixel, index) => {
+        const customIcon = new L.DivIcon({
+          className: 'custom-marker',
+          html: `<div style="position: relative;">
+                   <div style="background-color: ${pixel.color}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid #fff;"></div>
+                   <div class="custom-tooltip">${`User: ${pixel.username || 'Unknown'}, Placed: ${new Date(pixel.placed_at).toLocaleString()}`}</div>
+                 </div>`,
+        });
+
+        return (
+          <Marker
             key={index}
-            bounds={[
-              [pixel.lat, pixel.lng],
-              [pixel.lat + GRID_SIZE, pixel.lng + GRID_SIZE],
-            ]}
-            pathOptions={{ color: pixel.color, weight: 1, fillOpacity: 1 }}
+            position={[pixel.lat, pixel.lng]}
+            icon={customIcon}
             eventHandlers={{
               mouseover: () => setHoveredPixelIndex(index),
               mouseout: () => setHoveredPixelIndex(null),
             }}
-          >
-            <Tooltip
-              direction="top"
-              offset={[0, -10]}
-              opacity={1}
-              permanent={false}
-              sticky={true}
-            >
-              <span>{`User: ${pixel.username || 'Unknown'}, Placed: ${new Date(pixel.placed_at).toLocaleString()}`}</span>
-            </Tooltip>
-          </Rectangle>
-        ))}
-      </>
-    );
-  };
-  
-  const MarkerLayer = ({ pixels, setHoveredPixelIndex }) => {
-    return (
-      <>
-        {pixels.map((pixel, index) => {
-          const customIcon = new L.DivIcon({
-            className: 'custom-marker',
-            html: `<div style="position: relative;">
-                     <div style="background-color: ${pixel.color}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid #fff;"></div>
-                     <div class="custom-tooltip">${`User: ${pixel.username || 'Unknown'}, Placed: ${new Date(pixel.placed_at).toLocaleString()}`}</div>
-                   </div>`,
-          });
-  
-          return (
-            <Marker
-              key={index}
-              position={[pixel.lat, pixel.lng]}
-              icon={customIcon}
-              eventHandlers={{
-                mouseover: () => setHoveredPixelIndex(index),
-                mouseout: () => setHoveredPixelIndex(null),
-              }}
-            />
-          );
-        })}
-      </>
-    );
-  };
+          />
+        );
+      })}
+    </>
+  );
+};
 
 const GridLayer = ({ zoomLevel }) => {
   const map = useMap();
@@ -167,46 +167,45 @@ const HoverLayer = ({ hoveredPixel, hoveredPixelData }) => {
   );
 };
 
-
 const Timer = ({ nextAllowedTime }) => {
-    const calculateTimeLeft = useCallback(() => {
-      if (!nextAllowedTime) return null;
-      const now = new Date();
-      const nextAllowedDate = new Date(nextAllowedTime);
-      console.log(`Current time: ${now.toISOString()}`);
-      console.log(`Next allowed time: ${nextAllowedDate.toISOString()}`);
-  
-      const timeLeft = nextAllowedDate - now;
-      console.log(`Time left in milliseconds: ${timeLeft}`);
-  
-      if (timeLeft <= 0) {
-        return null;
-      }
-      const hours = Math.floor(timeLeft / 1000 / 60 / 60);
-      const minutes = Math.floor((timeLeft / 1000 / 60) % 60);
-      const seconds = Math.floor((timeLeft / 1000) % 60);
-      return { hours, minutes, seconds };
-    }, [nextAllowedTime]);
-  
-    const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
-  
-    useEffect(() => {
-      const timer = setInterval(() => {
-        setTimeLeft(calculateTimeLeft());
-      }, 1000);
-      return () => clearInterval(timer);
-    }, [calculateTimeLeft]);
-  
-    if (!timeLeft) {
-      return <div className="timer">You can place a pixel now!</div>;
+  const calculateTimeLeft = useCallback(() => {
+    if (!nextAllowedTime) return null;
+    const now = new Date();
+    const nextAllowedDate = new Date(nextAllowedTime);
+    console.log(`Current time: ${now.toISOString()}`);
+    console.log(`Next allowed time: ${nextAllowedDate.toISOString()}`);
+
+    const timeLeft = nextAllowedDate - now;
+    console.log(`Time left in milliseconds: ${timeLeft}`);
+
+    if (timeLeft <= 0) {
+      return null;
     }
-  
-    return (
-      <div className="timer">
-        Next pixel placement allowed in: {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s
-      </div>
-    );
-  };
+    const hours = Math.floor(timeLeft / 1000 / 60 / 60);
+    const minutes = Math.floor((timeLeft / 1000 / 60) % 60);
+    const seconds = Math.floor((timeLeft / 1000) % 60);
+    return { hours, minutes, seconds };
+  }, [nextAllowedTime]);
+
+  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [calculateTimeLeft]);
+
+  if (!timeLeft) {
+    return <div className="timer">You can place a pixel now!</div>;
+  }
+
+  return (
+    <div className="timer">
+      Next pixel placement allowed in: {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s
+    </div>
+  );
+};
 
 const popularCities = [
   { name: 'London', lat: 51.5074, lng: -0.1278 },
@@ -239,6 +238,7 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
   const [mapCenter, setMapCenter] = useState([51.505, -0.09]);
   const [hoverPosition, setHoverPosition] = useState(null);
   const [hcaptchaToken, setHcaptchaToken] = useState('');
+  const [showPins, setShowPins] = useState(true);
   const location = useLocation();
   const navigate = useNavigate();
   const initialSet = useRef(false);
@@ -289,6 +289,13 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
 
     return () => clearInterval(interval); // Clear interval on component unmount
   }, []);
+
+  useEffect(() => {
+    const loggedIn = localStorage.getItem('isLoggedIn');
+    if (loggedIn) {
+      setIsLoggedIn(true);
+    }
+  }, [setIsLoggedIn]);
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -375,6 +382,7 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
         setHcaptchaToken('');
         setErrorMessage('');
         setIsLoggedIn(true);
+        localStorage.setItem('isLoggedIn', 'true');
         if (isRegistering) {
           navigate('/'); // Navigate to home or dashboard after successful registration
         }
@@ -425,6 +433,10 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
     return null;
   };
 
+  const togglePinsVisibility = () => {
+    setShowPins(!showPins);
+  };
+
   return (
     <div className="map-container">
       <div className="color-picker">
@@ -433,12 +445,15 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
           onChangeComplete={(color) => setSelectedColor(color.hex)}
         />
       </div>
-      {isLoggedIn && (
-        <div className="top-buttons">
-          <button className="logout-button" onClick={handleLogout}>Logout</button>
-          <button onClick={() => navigate('/stats')}>Stats</button>
-        </div>
-      )}
+      <div className="top-buttons">
+        {isLoggedIn && (
+          <>
+            <button className="logout-button" onClick={handleLogout}>Logout</button>
+            <button className="stats-button" onClick={() => navigate('/stats')}>Stats</button>
+          </>
+        )}
+        <button className="pins-toggle-button" onClick={togglePinsVisibility}>{showPins ? 'Hide Pins' : 'Show Pins'}</button>
+      </div>
       <MapContainer center={mapCenter} zoom={zoomLevel} style={mapContainerStyle}>
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -446,7 +461,7 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
         />
         <MapEvents />
         <PixelLayer pixels={pixels} setHoveredPixelIndex={setHoveredPixelIndex} />
-        <MarkerLayer pixels={pixels} setHoveredPixelIndex={setHoveredPixelIndex} />
+        {showPins && <MarkerLayer pixels={pixels} setHoveredPixelIndex={setHoveredPixelIndex} />}
         <MapUpdater />
         {zoomLevel >= 18 && <GridLayer zoomLevel={zoomLevel} />}
         {hoverPosition && zoomLevel >= 18 && <HoverIndicator position={hoverPosition} />}

@@ -131,7 +131,7 @@
     left: 10px;
 }
 
-.logout-button {
+.logout-button, .stats-button {
     margin-right: 5px;
 }
 
