@@ -72,39 +72,32 @@ const PixelLayer = ({ pixels, setHoveredPixelIndex }) => {
 };
 
 const MarkerLayer = ({ pixels, setHoveredPixelIndex }) => {
-  return (
-    <>
-      {pixels.map((pixel, index) => {
-        const customIcon = new L.DivIcon({
-          className: 'custom-marker',
-          html: `<div style="background-color: ${pixel.color}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid #fff;"></div>`,
-        });
-
-        return (
-          <Marker
-            key={index}
-            position={[pixel.lat, pixel.lng]}
-            icon={customIcon}
-            eventHandlers={{
-              mouseover: () => setHoveredPixelIndex(index),
-              mouseout: () => setHoveredPixelIndex(null),
-            }}
-          >
-            <Tooltip
-              direction="top"
-              offset={[0, -10]}
-              opacity={1}
-              permanent={false}
-              sticky={true}
-            >
-              <span>{`User: ${pixel.username || 'Unknown'}, Placed: ${pixel.placed_at ? new Date(pixel.placed_at).toLocaleString() : 'Unknown'}`}</span>
-            </Tooltip>
-          </Marker>
-        );
-      })}
-    </>
-  );
-};
+    return (
+      <>
+        {pixels.map((pixel, index) => {
+          const customIcon = new L.DivIcon({
+            className: 'custom-marker',
+            html: `<div style="position: relative;">
+                     <div style="background-color: ${pixel.color}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid #fff;"></div>
+                     <div class="custom-tooltip">${`User: ${pixel.username || 'Unknown'}, Placed: ${pixel.placed_at ? new Date(pixel.placed_at).toLocaleString() : 'Unknown'}`}</div>
+                   </div>`,
+          });
+  
+          return (
+            <Marker
+              key={index}
+              position={[pixel.lat, pixel.lng]}
+              icon={customIcon}
+              eventHandlers={{
+                mouseover: () => setHoveredPixelIndex(index),
+                mouseout: () => setHoveredPixelIndex(null),
+              }}
+            />
+          );
+        })}
+      </>
+    );
+  };
 
 const GridLayer = ({ zoomLevel }) => {
   const map = useMap();
@@ -139,6 +132,20 @@ const GridLayer = ({ zoomLevel }) => {
         />
       ))}
     </>
+  );
+};
+
+const HoverIndicator = ({ position }) => {
+  if (!position) return null;
+
+  return (
+    <Rectangle
+      bounds={[
+        [position.lat, position.lng],
+        [position.lat + GRID_SIZE, position.lng + GRID_SIZE],
+      ]}
+      pathOptions={{ color: '#000000', weight: 1, fillOpacity: 0.5 }}
+    />
   );
 };
 
@@ -223,7 +230,7 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
   const [errorMessage, setErrorMessage] = useState('');
   const [nextAllowedTime, setNextAllowedTime] = useState(null);
   const [mapCenter, setMapCenter] = useState([51.505, -0.09]);
-
+  const [hoverPosition, setHoverPosition] = useState(null);
   const [hcaptchaToken, setHcaptchaToken] = useState('');
   const location = useLocation();
   const navigate = useNavigate();
@@ -268,9 +275,13 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
     };
 
     fetchPixels();
+
+    const interval = setInterval(() => {
+      fetchPixels();
+    }, 8000); // Fetch updates every 8 seconds - for real time updates of pixel data
+
+    return () => clearInterval(interval); // Clear interval on component unmount
   }, []);
-
-
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -282,12 +293,10 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
           console.error('Error fetching next allowed time:', error);
         }
       };
-  
+
       fetchNextAllowedTime();
     }
   }, [isLoggedIn]);
-  
-  
 
   const handleMapClick = (e) => {
     if (!isLoggedIn) {
@@ -325,6 +334,7 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
   const handleMouseMove = (e) => {
     if (zoomLevel < 18) {
       setHoveredPixelIndex(null);
+      setHoverPosition(null);
       return;
     }
 
@@ -335,6 +345,7 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
         snapToGrid(pixel.lat) === lat && snapToGrid(pixel.lng) === lng
     );
     setHoveredPixelIndex(hoveredPixelIndex);
+    setHoverPosition({ lat, lng });
   };
 
   const handleAuthSubmit = (e) => {
@@ -431,6 +442,7 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
         <MarkerLayer pixels={pixels} setHoveredPixelIndex={setHoveredPixelIndex} />
         <MapUpdater />
         {zoomLevel >= 18 && <GridLayer zoomLevel={zoomLevel} />}
+        {hoverPosition && zoomLevel >= 18 && <HoverIndicator position={hoverPosition} />}
         {hoveredPixelIndex !== null && zoomLevel >= 18 && (
           <HoverLayer
             hoveredPixel={pixels[hoveredPixelIndex]}
