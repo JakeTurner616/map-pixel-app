@@ -63,14 +63,14 @@ const PixelLayer = ({ pixels, setHoveredPixelIndex }) => {
               permanent={false}
               sticky={true}
             >
-              <span>{`User: ${pixel.username || 'Unknown'}, Placed: ${pixel.placed_at ? new Date(pixel.placed_at).toISOString() : 'Unknown'}`}</span>
+              <span>{`User: ${pixel.username || 'Unknown'}, Placed: ${new Date(pixel.placed_at).toLocaleString()}`}</span>
             </Tooltip>
           </Rectangle>
         ))}
       </>
     );
   };
-
+  
   const MarkerLayer = ({ pixels, setHoveredPixelIndex }) => {
     return (
       <>
@@ -79,7 +79,7 @@ const PixelLayer = ({ pixels, setHoveredPixelIndex }) => {
             className: 'custom-marker',
             html: `<div style="position: relative;">
                      <div style="background-color: ${pixel.color}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid #fff;"></div>
-                     <div class="custom-tooltip">${`User: ${pixel.username || 'Unknown'}, Placed: ${pixel.placed_at ? new Date(pixel.placed_at).toISOString() : 'Unknown'}`}</div>
+                     <div class="custom-tooltip">${`User: ${pixel.username || 'Unknown'}, Placed: ${new Date(pixel.placed_at).toLocaleString()}`}</div>
                    </div>`,
           });
   
