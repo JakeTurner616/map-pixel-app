@@ -41,37 +41,37 @@ const generateGridLines = (bounds) => {
 };
 
 const PixelLayer = ({ pixels, setHoveredPixelIndex }) => {
-  return (
-    <>
-      {pixels.map((pixel, index) => (
-        <Rectangle
-          key={index}
-          bounds={[
-            [pixel.lat, pixel.lng],
-            [pixel.lat + GRID_SIZE, pixel.lng + GRID_SIZE],
-          ]}
-          pathOptions={{ color: pixel.color, weight: 1, fillOpacity: 1 }}
-          eventHandlers={{
-            mouseover: () => setHoveredPixelIndex(index),
-            mouseout: () => setHoveredPixelIndex(null),
-          }}
-        >
-          <Tooltip
-            direction="top"
-            offset={[0, -10]}
-            opacity={1}
-            permanent={false}
-            sticky={true}
+    return (
+      <>
+        {pixels.map((pixel, index) => (
+          <Rectangle
+            key={index}
+            bounds={[
+              [pixel.lat, pixel.lng],
+              [pixel.lat + GRID_SIZE, pixel.lng + GRID_SIZE],
+            ]}
+            pathOptions={{ color: pixel.color, weight: 1, fillOpacity: 1 }}
+            eventHandlers={{
+              mouseover: () => setHoveredPixelIndex(index),
+              mouseout: () => setHoveredPixelIndex(null),
+            }}
           >
-            <span>{`User: ${pixel.username || 'Unknown'}, Placed: ${pixel.placed_at ? new Date(pixel.placed_at).toLocaleString() : 'Unknown'}`}</span>
-          </Tooltip>
-        </Rectangle>
-      ))}
-    </>
-  );
-};
+            <Tooltip
+              direction="top"
+              offset={[0, -10]}
+              opacity={1}
+              permanent={false}
+              sticky={true}
+            >
+              <span>{`User: ${pixel.username || 'Unknown'}, Placed: ${pixel.placed_at ? new Date(pixel.placed_at).toISOString() : 'Unknown'}`}</span>
+            </Tooltip>
+          </Rectangle>
+        ))}
+      </>
+    );
+  };
 
-const MarkerLayer = ({ pixels, setHoveredPixelIndex }) => {
+  const MarkerLayer = ({ pixels, setHoveredPixelIndex }) => {
     return (
       <>
         {pixels.map((pixel, index) => {
@@ -79,7 +79,7 @@ const MarkerLayer = ({ pixels, setHoveredPixelIndex }) => {
             className: 'custom-marker',
             html: `<div style="position: relative;">
                      <div style="background-color: ${pixel.color}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid #fff;"></div>
-                     <div class="custom-tooltip">${`User: ${pixel.username || 'Unknown'}, Placed: ${pixel.placed_at ? new Date(pixel.placed_at).toLocaleString() : 'Unknown'}`}</div>
+                     <div class="custom-tooltip">${`User: ${pixel.username || 'Unknown'}, Placed: ${pixel.placed_at ? new Date(pixel.placed_at).toISOString() : 'Unknown'}`}</div>
                    </div>`,
           });
   
@@ -167,39 +167,46 @@ const HoverLayer = ({ hoveredPixel, hoveredPixelData }) => {
   );
 };
 
+
 const Timer = ({ nextAllowedTime }) => {
-  const calculateTimeLeft = useCallback(() => {
-    if (!nextAllowedTime) return null;
-    const now = new Date();
-    const timeLeft = new Date(nextAllowedTime) - now;
-    if (timeLeft <= 0) {
-      return null;
+    const calculateTimeLeft = useCallback(() => {
+      if (!nextAllowedTime) return null;
+      const now = new Date();
+      const nextAllowedDate = new Date(nextAllowedTime);
+      console.log(`Current time: ${now.toISOString()}`);
+      console.log(`Next allowed time: ${nextAllowedDate.toISOString()}`);
+  
+      const timeLeft = nextAllowedDate - now;
+      console.log(`Time left in milliseconds: ${timeLeft}`);
+  
+      if (timeLeft <= 0) {
+        return null;
+      }
+      const hours = Math.floor(timeLeft / 1000 / 60 / 60);
+      const minutes = Math.floor((timeLeft / 1000 / 60) % 60);
+      const seconds = Math.floor((timeLeft / 1000) % 60);
+      return { hours, minutes, seconds };
+    }, [nextAllowedTime]);
+  
+    const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
+  
+    useEffect(() => {
+      const timer = setInterval(() => {
+        setTimeLeft(calculateTimeLeft());
+      }, 1000);
+      return () => clearInterval(timer);
+    }, [calculateTimeLeft]);
+  
+    if (!timeLeft) {
+      return <div className="timer">You can place a pixel now!</div>;
     }
-    const hours = Math.floor(timeLeft / 1000 / 60 / 60);
-    const minutes = Math.floor((timeLeft / 1000 / 60) % 60);
-    const seconds = Math.floor((timeLeft / 1000) % 60);
-    return { hours, minutes, seconds };
-  }, [nextAllowedTime]);
-
-  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft(calculateTimeLeft());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [calculateTimeLeft]);
-
-  if (!timeLeft) {
-    return <div className="timer">You can place a pixel now!</div>;
-  }
-
-  return (
-    <div className="timer">
-      Next pixel placement allowed in: {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s
-    </div>
-  );
-};
+  
+    return (
+      <div className="timer">
+        Next pixel placement allowed in: {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s
+      </div>
+    );
+  };
 
 const popularCities = [
   { name: 'London', lat: 51.5074, lng: -0.1278 },
