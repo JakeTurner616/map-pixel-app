@@ -1,25 +1,25 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route} from 'react-router-dom';
+import MapComponent from './MapComponent';
+import StatsPage from './StatsPage';
 
-function App() {
+const App = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(() => JSON.parse(localStorage.getItem('isLoggedIn')) || false);
+
+  useEffect(() => {
+    localStorage.setItem('isLoggedIn', JSON.stringify(isLoggedIn));
+  }, [isLoggedIn]);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <div>
+        <Routes>
+          <Route path="/" element={<MapComponent setIsLoggedIn={setIsLoggedIn} isLoggedIn={isLoggedIn} />} />
+          <Route path="/stats" element={<StatsPage isLoggedIn={isLoggedIn} />} />
+        </Routes>
+      </div>
+    </Router>
   );
-}
+};
 
 export default App;
