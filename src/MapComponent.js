@@ -474,9 +474,10 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
   {isLoggedIn && (
     <>
       <button className="logout-button" onClick={handleLogout}>Logout</button>
-      <button className="stats-button" onClick={() => navigate('/stats')}>Stats</button>
+      
     </>
   )}
+  <button className="stats-button" onClick={() => navigate('/stats')}>Stats</button>
   <button className="pins-toggle-button" onClick={togglePinsVisibility}>{showPins ? 'Hide Pins' : 'Show Pins'}</button>
 </div>
       <MapContainer center={mapCenter} zoom={zoomLevel} style={mapContainerStyle}>

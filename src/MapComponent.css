@@ -61,16 +61,7 @@
   }
   /* Styles for Mobile Devices */
   @media (max-width: 768px) {
-    .color-picker {
-        position: absolute;
-        top: 336px;
-        right: 11px;
-        z-index: 1001;
-        background: white;
-        padding: 10px;
-        border-radius: 5px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-      }
+
   
     .timer {
       top: auto;
@@ -83,11 +74,6 @@
       padding: 10px;
     }
   
-    .color-picker-toggle-button {
-      top: auto;
-      bottom: 70px;
-      right: 10px;
-    }
   }
 
 .timer {
@@ -186,7 +172,7 @@
     gap: 10px; /* Optional: Add some space between the buttons */
     position: absolute;
     bottom: 10px;
-    right: 10px;
+    left: 10px;
     z-index: 1001;
   }
 
