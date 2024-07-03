@@ -1,64 +1,81 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import './StatsPage.css'; // Add some basic styling
 
 const StatsPage = ({ isLoggedIn }) => {
-  const [stats, setStats] = useState(null);
+  const [userStats, setUserStats] = useState(null);
+  const [globalStats, setGlobalStats] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
-  const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isLoggedIn) {
-      navigate('/'); // Redirect to the home page if not logged in
-      return;
-    }
-
-    const fetchStats = async () => {
+    const fetchGlobalStats = async () => {
       try {
         const backendUrl = process.env.REACT_APP_BACKEND_URL;
-        const response = await axios.get(`${backendUrl}/api/user_stats`, { withCredentials: true });
-        setStats(response.data);
+        const response = await axios.get(`${backendUrl}/api/global_stats`);
+        setGlobalStats(response.data);
       } catch (error) {
-        console.error('Error fetching stats:', error);
-        setErrorMessage('Failed to fetch stats. Please try again later.');
+        console.error('Error fetching global stats:', error);
+        setErrorMessage('Failed to fetch global stats. Please try again later.');
       }
     };
 
-    fetchStats();
-  }, [isLoggedIn, navigate]);
+    const fetchUserStats = async () => {
+      try {
+        const backendUrl = process.env.REACT_APP_BACKEND_URL;
+        const response = await axios.get(`${backendUrl}/api/user_stats`, { withCredentials: true });
+        setUserStats(response.data);
+      } catch (error) {
+        console.error('Error fetching user stats:', error);
+        setErrorMessage('Failed to fetch user stats. Please try again later.');
+      }
+    };
 
-  if (!isLoggedIn) {
-    return <div className="error-message">Please log in to view your statistics.</div>;
-  }
+    fetchGlobalStats();
+
+    if (isLoggedIn) {
+      fetchUserStats();
+    }
+  }, [isLoggedIn]);
 
   if (errorMessage) {
     return <div className="error-message">{errorMessage}</div>;
   }
 
-  if (!stats) {
-    return <div className="loading-message">Loading...</div>;
-  }
-
   return (
     <div className="stats-container">
-      <h2>User Statistics</h2>
-      <p>Total Pixels Placed: {stats.totalPixelsPlaced}</p>
-      <p>Total Unique Colors Used: {stats.totalUniqueColors}</p>
-      <h3>Placed Pixels:</h3>
-      <ul>
-        {stats.placedPixels.map((pixel, index) => (
-          <li key={index}>
-            <Link to={`/?lat=${pixel.lat}&lng=${pixel.lng}`}>
-              Pixel at ({pixel.lat.toFixed(4)}, {pixel.lng.toFixed(4)}) - {pixel.color}
-            </Link>
-          </li>
-        ))}
-      </ul>
-      <h3>World Statistics</h3>
-      <p>Total Pixels Placed in the World: {stats.totalWorldPixelsPlaced}</p>
-      <p>Total Users with Pixels: {stats.totalUsersWithPixels}</p>
-      <p>Percentage of Pixels Placed Relative to the World: {stats.percentagePixelsPlaced.toFixed(20)}%</p>
+      <h2>World Statistics</h2>
+      {globalStats ? (
+        <>
+          <p>Total Pixels Placed in the World: {globalStats.totalWorldPixelsPlaced}</p>
+          <p>Total Users with Pixels: {globalStats.totalUsersWithPixels}</p>
+          <p>Percentage of Pixels Placed Relative to the World: {globalStats.percentagePixelsPlaced}%</p>
+        </>
+      ) : (
+        <div className="loading-message">Loading global stats...</div>
+      )}
+      
+      {isLoggedIn && userStats && (
+        <>
+          <h2>User Statistics</h2>
+          <p>Total Pixels Placed: {userStats.totalPixelsPlaced}</p>
+          <p>Total Unique Colors Used: {userStats.totalUniqueColors}</p>
+          <h3>Placed Pixels:</h3>
+          <ul>
+            {userStats.placedPixels.map((pixel, index) => (
+              <li key={index}>
+                <Link to={`/?lat=${pixel.lat}&lng=${pixel.lng}`}>
+                  Pixel at ({pixel.lat.toFixed(4)}, {pixel.lng.toFixed(4)}) - {pixel.color}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      
+      {!isLoggedIn && (
+        <div className="info-message">Log in to view your personal statistics.</div>
+      )}
     </div>
   );
 };
