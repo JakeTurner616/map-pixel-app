@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import MapComponent from './MapComponent'; // Assuming you have a MapComponent
-import StatsPage from './StatsPage'; // Assuming you have a StatsPage
+import { Route, Routes } from 'react-router-dom';
+import MapComponent from './MapComponent';
+import StatsPage from './StatsPage';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -14,17 +14,10 @@ function App() {
   }, []);
 
   return (
-    <Router basename="/map-pixel-app">
-      <Routes>
-        <Route
-          exact
-          path="/"
-          element={<MapComponent setIsLoggedIn={setIsLoggedIn} isLoggedIn={isLoggedIn} />}
-        />
-        <Route path="/stats" element={<StatsPage isLoggedIn={isLoggedIn} />} />
-        {/* Add other routes here */}
-      </Routes>
-    </Router>
+    <Routes>
+      <Route path="/" element={<MapComponent setIsLoggedIn={setIsLoggedIn} isLoggedIn={isLoggedIn} />} />
+      <Route path="/stats" element={<StatsPage isLoggedIn={isLoggedIn} />} />
+    </Routes>
   );
 }
 
