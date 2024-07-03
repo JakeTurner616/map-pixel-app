@@ -239,6 +239,7 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
   const [hoverPosition, setHoverPosition] = useState(null);
   const [hcaptchaToken, setHcaptchaToken] = useState('');
   const [showPins, setShowPins] = useState(true);
+  const [isColorPickerVisible, setIsColorPickerVisible] = useState(window.innerWidth > 768); // Open by default on large screens
   const location = useLocation();
   const navigate = useNavigate();
   const initialSet = useRef(false);
@@ -437,23 +438,47 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
     setShowPins(!showPins);
   };
 
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth <= 768) {
+        setIsColorPickerVisible(false);
+      } else {
+        setIsColorPickerVisible(true);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
   return (
     <div className="map-container">
-      <div className="color-picker">
-        <SketchPicker
-          color={selectedColor}
-          onChangeComplete={(color) => setSelectedColor(color.hex)}
-        />
-      </div>
-      <div className="top-buttons">
-        {isLoggedIn && (
-          <>
-            <button className="logout-button" onClick={handleLogout}>Logout</button>
-            <button className="stats-button" onClick={() => navigate('/stats')}>Stats</button>
-          </>
-        )}
-        <button className="pins-toggle-button" onClick={togglePinsVisibility}>{showPins ? 'Hide Pins' : 'Show Pins'}</button>
-      </div>
+      <button 
+        className="color-picker-toggle-button" 
+        onClick={() => setIsColorPickerVisible(!isColorPickerVisible)}
+      >
+        {isColorPickerVisible ? 'Hide Color Picker' : 'Show Color Picker'}
+      </button>
+      {isColorPickerVisible && (
+        <div className="color-picker">
+          <SketchPicker
+            color={selectedColor}
+            onChangeComplete={(color) => setSelectedColor(color.hex)}
+          />
+        </div>
+      )}
+<div className="top-buttons">
+  {isLoggedIn && (
+    <>
+      <button className="logout-button" onClick={handleLogout}>Logout</button>
+      <button className="stats-button" onClick={() => navigate('/stats')}>Stats</button>
+    </>
+  )}
+  <button className="pins-toggle-button" onClick={togglePinsVisibility}>{showPins ? 'Hide Pins' : 'Show Pins'}</button>
+</div>
       <MapContainer center={mapCenter} zoom={zoomLevel} style={mapContainerStyle}>
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
