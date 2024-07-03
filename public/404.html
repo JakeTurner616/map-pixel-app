@@ -5,10 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>404 Not Found</title>
   <script type="text/javascript">
-    // Redirect to index.html with the pathname preserved
-    var pathname = window.location.pathname;
-    var redirectPath = window.location.origin + '/map-pixel-app' + pathname;
-    window.location.href = redirectPath;
+    var path = window.location.pathname.replace('/map-pixel-app', '');
+    window.location.replace('/map-pixel-app/#' + path);
   </script>
 </head>
 <body>

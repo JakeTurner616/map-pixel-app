@@ -30,6 +30,14 @@
     -->
     <title>Map Pixel</title>
     <base href="/map-pixel-app/" />
+    <script type="text/javascript">
+      // Redirect from /stats to /#/stats
+      var pathname = window.location.pathname;
+      if (pathname === '/map-pixel-app/stats') {
+        window.location.replace('/map-pixel-app/#/stats');
+      }
+      
+    </script>
     <script src="https://hcaptcha.com/1/api.js" async defer></script>
     <link
       rel="stylesheet"

@@ -54,7 +54,7 @@ const StatsPage = ({ isLoggedIn }) => {
       ) : (
         <div className="loading-message">Loading global stats...</div>
       )}
-      
+
       {isLoggedIn && userStats && (
         <>
           <h2>User Statistics</h2>
@@ -72,7 +72,7 @@ const StatsPage = ({ isLoggedIn }) => {
           </ul>
         </>
       )}
-      
+
       {!isLoggedIn && (
         <div className="info-message">Log in to view your personal statistics.</div>
       )}
