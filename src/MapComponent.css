@@ -15,8 +15,9 @@
     background-color: white;
     border: 1px solid black;
     padding: 5px;
-    z-index: 1000;
+    z-index: 1001; /* Ensure it's above other elements */
     pointer-events: none;
+    transform: translate(-50%, -100%); /* Center horizontally and move above the marker */
   }
   
   .custom-marker:hover .custom-tooltip {

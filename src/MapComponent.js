@@ -92,7 +92,7 @@ const MarkerLayer = ({ pixels }) => {
           className: 'custom-marker',
           html: `<div style="position: relative;">
                    <div style="background-color: ${pixel.color}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid #fff;"></div>
-                   <div class="custom-tooltip">${`User: ${pixel.username || 'Unknown'}, Placed: ${new Date(pixel.placed_at).toLocaleString()}`}</div>
+                   <div class="custom-tooltip" style="bottom: 25px; left: 50%; transform: translateX(-50%);">${`User: ${pixel.username || 'Unknown'}, Placed: ${new Date(pixel.placed_at).toLocaleString()}`}</div>
                  </div>`,
         });
 
