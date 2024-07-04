@@ -459,16 +459,16 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
   const topmostPixels = getTopmostPixels(pixels);
   const hoveredPixel = hoverPosition
     ? topmostPixels.find(
-        (pixel) =>
-          snapToGrid(pixel.lat) === snapToGrid(hoverPosition.lat) &&
-          snapToGrid(pixel.lng) === snapToGrid(hoverPosition.lng)
-      )
+      (pixel) =>
+        snapToGrid(pixel.lat) === snapToGrid(hoverPosition.lat) &&
+        snapToGrid(pixel.lng) === snapToGrid(hoverPosition.lng)
+    )
     : null;
 
   return (
     <div className="map-container">
-      <button 
-        className="color-picker-toggle-button" 
+      <button
+        className="color-picker-toggle-button"
         onClick={() => setIsColorPickerVisible(!isColorPickerVisible)}
       >
         {isColorPickerVisible ? 'Hide Color Picker' : 'Show Color Picker'}
@@ -490,7 +490,18 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
         <button className="stats-button" onClick={() => navigate('/stats')}>Stats</button>
         <button className="pins-toggle-button" onClick={togglePinsVisibility}>{showPins ? 'Hide Pins' : 'Show Pins'}</button>
       </div>
-      <MapContainer center={mapCenter} zoom={zoomLevel} style={mapContainerStyle}>
+      <MapContainer
+        center={mapCenter}
+        zoom={zoomLevel}
+        style={mapContainerStyle}
+        maxBounds={[
+          [-95, -190],  // Allows some panning beyond the typical latitudinal and longitudinal limits
+          [95, 190]
+        ]}
+        worldCopyJump={false}
+        minZoom={4}  // Allows users to zoom out to a wider view, but not too far
+        maxZoom={18}  // Allows users to zoom in closely
+      >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution="&copy; OpenStreetMap contributors"
