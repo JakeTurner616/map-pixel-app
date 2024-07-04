@@ -48,6 +48,7 @@ const StatsPage = ({ isLoggedIn }) => {
       {globalStats ? (
         <>
           <p>Total Pixels Placed in the World: {globalStats.totalWorldPixelsPlaced}</p>
+          <p>Total Unique Pixels Currently in the World: {globalStats.totalUniquePixels}</p>
           <p>Total Users with Pixels: {globalStats.totalUsersWithPixels}</p>
           <p>Percentage of Pixels Placed Relative to the World: {globalStats.percentagePixelsPlaced}%</p>
         </>
