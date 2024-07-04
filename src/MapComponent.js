@@ -40,10 +40,25 @@ const generateGridLines = (bounds) => {
   return lines;
 };
 
-const PixelLayer = ({ pixels, setHoveredPixelIndex }) => {
+const getTopmostPixels = (pixels) => {
+  const pixelMap = new Map();
+
+  pixels.forEach(pixel => {
+    const key = `${snapToGrid(pixel.lat)}-${snapToGrid(pixel.lng)}`;
+    if (!pixelMap.has(key) || new Date(pixel.placed_at) > new Date(pixelMap.get(key).placed_at)) {
+      pixelMap.set(key, pixel);
+    }
+  });
+
+  return Array.from(pixelMap.values());
+};
+
+const PixelLayer = ({ pixels }) => {
+  const topmostPixels = getTopmostPixels(pixels);
+
   return (
     <>
-      {pixels.map((pixel, index) => (
+      {topmostPixels.map((pixel, index) => (
         <Rectangle
           key={index}
           bounds={[
@@ -51,10 +66,6 @@ const PixelLayer = ({ pixels, setHoveredPixelIndex }) => {
             [pixel.lat + GRID_SIZE, pixel.lng + GRID_SIZE],
           ]}
           pathOptions={{ color: pixel.color, weight: 1, fillOpacity: 1 }}
-          eventHandlers={{
-            mouseover: () => setHoveredPixelIndex(index),
-            mouseout: () => setHoveredPixelIndex(null),
-          }}
         >
           <Tooltip
             direction="top"
@@ -71,10 +82,12 @@ const PixelLayer = ({ pixels, setHoveredPixelIndex }) => {
   );
 };
 
-const MarkerLayer = ({ pixels, setHoveredPixelIndex }) => {
+const MarkerLayer = ({ pixels }) => {
+  const topmostPixels = getTopmostPixels(pixels);
+
   return (
     <>
-      {pixels.map((pixel, index) => {
+      {topmostPixels.map((pixel, index) => {
         const customIcon = new L.DivIcon({
           className: 'custom-marker',
           html: `<div style="position: relative;">
@@ -88,10 +101,6 @@ const MarkerLayer = ({ pixels, setHoveredPixelIndex }) => {
             key={index}
             position={[pixel.lat, pixel.lng]}
             icon={customIcon}
-            eventHandlers={{
-              mouseover: () => setHoveredPixelIndex(index),
-              mouseout: () => setHoveredPixelIndex(null),
-            }}
           />
         );
       })}
@@ -149,7 +158,7 @@ const HoverIndicator = ({ position }) => {
   );
 };
 
-const HoverLayer = ({ hoveredPixel, hoveredPixelData }) => {
+const HoverLayer = ({ hoveredPixel }) => {
   if (!hoveredPixel) return null;
 
   return (
@@ -161,7 +170,7 @@ const HoverLayer = ({ hoveredPixel, hoveredPixelData }) => {
       pathOptions={{ color: '#000000', weight: 1, fillOpacity: 0.5 }}
     >
       <Tooltip direction="top" offset={[0, -10]} opacity={1}>
-        <span>{`User: ${hoveredPixelData.username || 'Unknown'}, Placed: ${hoveredPixelData.placed_at ? new Date(hoveredPixelData.placed_at).toLocaleString() : 'Unknown'}`}</span>
+        <span>{`User: ${hoveredPixel.username || 'Unknown'}, Placed: ${hoveredPixel.placed_at ? new Date(hoveredPixel.placed_at).toLocaleString() : 'Unknown'}`}</span>
       </Tooltip>
     </Rectangle>
   );
@@ -228,7 +237,6 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
   const [pixels, setPixels] = useState([]);
   const [selectedColor, setSelectedColor] = useState('#ff0000');
   const [zoomLevel, setZoomLevel] = useState(13);
-  const [hoveredPixelIndex, setHoveredPixelIndex] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -348,18 +356,12 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
 
   const handleMouseMove = (e) => {
     if (zoomLevel < 18) {
-      setHoveredPixelIndex(null);
       setHoverPosition(null);
       return;
     }
 
     const lat = snapToGrid(e.latlng.lat);
     const lng = snapToGrid(e.latlng.lng);
-    const hoveredPixelIndex = pixels.findIndex(
-      (pixel) =>
-        snapToGrid(pixel.lat) === lat && snapToGrid(pixel.lng) === lng
-    );
-    setHoveredPixelIndex(hoveredPixelIndex);
     setHoverPosition({ lat, lng });
   };
 
@@ -454,6 +456,15 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
     };
   }, []);
 
+  const topmostPixels = getTopmostPixels(pixels);
+  const hoveredPixel = hoverPosition
+    ? topmostPixels.find(
+        (pixel) =>
+          snapToGrid(pixel.lat) === snapToGrid(hoverPosition.lat) &&
+          snapToGrid(pixel.lng) === snapToGrid(hoverPosition.lng)
+      )
+    : null;
+
   return (
     <div className="map-container">
       <button 
@@ -470,31 +481,29 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
           />
         </div>
       )}
-<div className="top-buttons">
-  {isLoggedIn && (
-    <>
-      <button className="logout-button" onClick={handleLogout}>Logout</button>
-      
-    </>
-  )}
-  <button className="stats-button" onClick={() => navigate('/stats')}>Stats</button>
-  <button className="pins-toggle-button" onClick={togglePinsVisibility}>{showPins ? 'Hide Pins' : 'Show Pins'}</button>
-</div>
+      <div className="top-buttons">
+        {isLoggedIn && (
+          <>
+            <button className="logout-button" onClick={handleLogout}>Logout</button>
+          </>
+        )}
+        <button className="stats-button" onClick={() => navigate('/stats')}>Stats</button>
+        <button className="pins-toggle-button" onClick={togglePinsVisibility}>{showPins ? 'Hide Pins' : 'Show Pins'}</button>
+      </div>
       <MapContainer center={mapCenter} zoom={zoomLevel} style={mapContainerStyle}>
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution="&copy; OpenStreetMap contributors"
         />
         <MapEvents />
-        <PixelLayer pixels={pixels} setHoveredPixelIndex={setHoveredPixelIndex} />
-        {showPins && <MarkerLayer pixels={pixels} setHoveredPixelIndex={setHoveredPixelIndex} />}
+        <PixelLayer pixels={topmostPixels} />
+        {showPins && <MarkerLayer pixels={topmostPixels} />}
         <MapUpdater />
         {zoomLevel >= 18 && <GridLayer zoomLevel={zoomLevel} />}
         {hoverPosition && zoomLevel >= 18 && <HoverIndicator position={hoverPosition} />}
-        {hoveredPixelIndex !== null && zoomLevel >= 18 && (
+        {hoveredPixel && zoomLevel >= 18 && (
           <HoverLayer
-            hoveredPixel={pixels[hoveredPixelIndex]}
-            hoveredPixelData={pixels[hoveredPixelIndex]}
+            hoveredPixel={hoveredPixel}
           />
         )}
       </MapContainer>
