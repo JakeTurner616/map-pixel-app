@@ -388,6 +388,7 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
     e.preventDefault();
 
     if (!hcaptchaToken) {
+      console.error('Please complete the hCaptcha');
       setErrorMessage('Please complete the hCaptcha');
       return;
     }
