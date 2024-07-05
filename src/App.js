@@ -16,7 +16,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<MapComponent setIsLoggedIn={setIsLoggedIn} isLoggedIn={isLoggedIn} />} />
-      <Route path="/stats" element={<StatsPage isLoggedIn={isLoggedIn} />} />
+      <Route path="/stats" element={<StatsPage isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />} />
     </Routes>
   );
 }
