@@ -8,6 +8,23 @@
 .custom-marker.hidden {
     opacity: 0;
 }
+:root {
+  --vh: 100vh;
+  --svh: 100svh;
+  --lvh: 100lvh;
+  --dvh: 100dvh;
+}
+
+@supports (height: 100svh) {
+  :root {
+    --vh: 100dvh;
+  }
+}
+
+.map-container {
+  height: var(--vh);
+  width: 100vw;
+}
 
 .custom-tooltip {
     display: none;
