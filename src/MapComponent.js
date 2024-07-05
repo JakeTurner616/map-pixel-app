@@ -92,7 +92,7 @@ const MarkerLayer = ({ pixels }) => {
           className: 'custom-marker',
           html: `<div style="position: relative;">
                    <div style="background-color: ${pixel.color}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid #fff;"></div>
-                   <div class="custom-tooltip" style="bottom: 25px; left: 50%; transform: translateX(-50%);">${`User: ${pixel.username || 'Unknown'}, Placed: ${new Date(pixel.placed_at).toLocaleString()}`}</div>
+                   <div class="custom-tooltip">${`User: ${pixel.username || 'Unknown'}, Placed: ${new Date(pixel.placed_at).toLocaleString()}`}</div>
                  </div>`,
         });
 
@@ -278,15 +278,13 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
   useEffect(() => {
     const fetchPixels = async () => {
       try {
-        const response = await fetch(`${backendUrl}/api/get_map`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        const data = await response.json();
-        console.log('Fetched pixel data:', data);
-        setPixels(data.pixels);
+        const response = await axios.get(`${backendUrl}/api/get_map`);
+        setPixels(response.data.pixels);
       } catch (error) {
         console.error('Error fetching pixel data:', error);
+        if (error.response && error.response.status === 401) {
+          handleLogout();
+        }
       }
     };
 
@@ -294,7 +292,7 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
 
     const interval = setInterval(() => {
       fetchPixels();
-    }, 8000); // Fetch updates every 8 seconds - for real time updates of pixel data
+    }, 8000); // Fetch updates every 8 seconds - for real-time updates of pixel data
 
     return () => clearInterval(interval); // Clear interval on component unmount
   }, []);
@@ -314,6 +312,9 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
           setNextAllowedTime(response.data.next_allowed_time);
         } catch (error) {
           console.error('Error fetching next allowed time:', error);
+          if (error.response && error.response.status === 401) {
+            handleLogout();
+          }
         }
       };
 
@@ -345,6 +346,8 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
         console.error('Error updating pixel:', error);
         if (error.response && error.response.status === 403 && error.response.data.next_allowed_time) {
           setNextAllowedTime(error.response.data.next_allowed_time);
+        } else if (error.response && error.response.status === 401) {
+          handleLogout();
         } else {
           setErrorMessage('Network error: ' + error.message);
           if (error.response && error.response.data && error.response.data.next_allowed_time) {
