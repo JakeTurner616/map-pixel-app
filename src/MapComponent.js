@@ -262,11 +262,9 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
       })
       .catch((error) => {
         console.error('Error logging out:', error);
-        if (error.response && error.response.status === 405) {
-          setErrorMessage('Method not allowed. Please make sure the HTTP method is POST.');
-        } else {
-          setErrorMessage('Network error: ' + error.message);
-        }
+        setIsLoggedIn(false); // Ensure user is logged out even if the logout request fails
+        setNextAllowedTime(null);
+        localStorage.removeItem('isLoggedIn');
       });
   }, [setIsLoggedIn]);
 
@@ -300,7 +298,7 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
         setPixels(response.data.pixels);
       } catch (error) {
         console.error('Error fetching pixel data:', error);
-        if (error.response && error.response.status === 401) {
+        if (error.response && (error.response.status === 401 || error.response.status === 405)) {
           handleLogout();
         }
       }
@@ -330,7 +328,7 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
           setNextAllowedTime(response.data.next_allowed_time);
         } catch (error) {
           console.error('Error fetching next allowed time:', error);
-          if (error.response && error.response.status === 401) {
+          if (error.response && (error.response.status === 401 || error.response.status === 405)) {
             handleLogout();
           }
         }
@@ -364,7 +362,7 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
         console.error('Error updating pixel:', error);
         if (error.response && error.response.status === 403 && error.response.data.next_allowed_time) {
           setNextAllowedTime(error.response.data.next_allowed_time);
-        } else if (error.response && error.response.status === 401) {
+        } else if (error.response && (error.response.status === 401 || error.response.status === 405)) {
           handleLogout();
         } else {
           setErrorMessage('Network error: ' + error.message);
