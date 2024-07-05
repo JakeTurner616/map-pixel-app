@@ -252,6 +252,24 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
   const navigate = useNavigate();
   const initialSet = useRef(false);
 
+  const handleLogout = useCallback(() => {
+    axios.post(`${backendUrl}/logout`, {}, { withCredentials: true })
+      .then((response) => {
+        console.log('Logout response:', response.data);
+        setIsLoggedIn(false);
+        setNextAllowedTime(null);
+        localStorage.removeItem('isLoggedIn');
+      })
+      .catch((error) => {
+        console.error('Error logging out:', error);
+        if (error.response && error.response.status === 405) {
+          setErrorMessage('Method not allowed. Please make sure the HTTP method is POST.');
+        } else {
+          setErrorMessage('Network error: ' + error.message);
+        }
+      });
+  }, [setIsLoggedIn]);
+
   const MapUpdater = () => {
     const map = useMap();
 
@@ -295,7 +313,7 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
     }, 8000); // Fetch updates every 8 seconds - for real-time updates of pixel data
 
     return () => clearInterval(interval); // Clear interval on component unmount
-  }, []);
+  }, [handleLogout]);
 
   useEffect(() => {
     const loggedIn = localStorage.getItem('isLoggedIn');
@@ -320,7 +338,7 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
 
       fetchNextAllowedTime();
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, handleLogout]);
 
   const handleMapClick = (e) => {
     if (!isLoggedIn) {
@@ -399,24 +417,6 @@ const MapComponent = ({ setIsLoggedIn, isLoggedIn }) => {
           setErrorMessage(error.response.data.message);
         } else {
           setErrorMessage('An unexpected error occurred');
-        }
-      });
-  };
-
-  const handleLogout = () => {
-    axios.post(`${backendUrl}/logout`, {}, { withCredentials: true })
-      .then((response) => {
-        console.log('Logout response:', response.data);
-        setIsLoggedIn(false);
-        setNextAllowedTime(null);
-        localStorage.removeItem('isLoggedIn');
-      })
-      .catch((error) => {
-        console.error('Error logging out:', error);
-        if (error.response && error.response.status === 405) {
-          setErrorMessage('Method not allowed. Please make sure the HTTP method is POST.');
-        } else {
-          setErrorMessage('Network error: ' + error.message);
         }
       });
   };
