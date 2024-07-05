@@ -16,7 +16,7 @@ const StatsPage = ({ isLoggedIn }) => {
         setGlobalStats(response.data);
       } catch (error) {
         console.error('Error fetching global stats:', error);
-        setErrorMessage('Failed to fetch global stats. Please try again later.');
+        setErrorMessage('Failed to fetch global stats. \nThe server is incorrectly configured or offline if this happens.');
       }
     };
 
@@ -27,7 +27,7 @@ const StatsPage = ({ isLoggedIn }) => {
         setUserStats(response.data);
       } catch (error) {
         console.error('Error fetching user stats:', error);
-        setErrorMessage('Failed to fetch user stats. Please try again later.');
+        setErrorMessage('Failed to fetch user stats. Either the session is invalid or the server is incorrectly configured or offline.\n Try to relog.');
       }
     };
 
@@ -46,12 +46,12 @@ const StatsPage = ({ isLoggedIn }) => {
     <div className="stats-container">
       <h2>World Statistics</h2>
       {globalStats ? (
-        <>
+        <div className="card">
           <p>Total Pixels Placed in the World: {globalStats.totalWorldPixelsPlaced}</p>
           <p>Total Unique Pixels Currently in the World: {globalStats.totalUniquePixels}</p>
           <p>Total Users with Pixels: {globalStats.totalUsersWithPixels}</p>
           <p>Percentage of Pixels Placed Relative to the World: {globalStats.percentagePixelsPlaced}%</p>
-        </>
+        </div>
       ) : (
         <div className="loading-message">Loading global stats...</div>
       )}
@@ -59,18 +59,20 @@ const StatsPage = ({ isLoggedIn }) => {
       {isLoggedIn && userStats && (
         <>
           <h2>User Statistics</h2>
-          <p>Total Pixels Placed: {userStats.totalPixelsPlaced}</p>
-          <p>Total Unique Colors Used: {userStats.totalUniqueColors}</p>
-          <h3>Placed Pixels:</h3>
-          <ul>
-            {userStats.placedPixels.map((pixel, index) => (
-              <li key={index}>
-                <Link to={`/?lat=${pixel.lat}&lng=${pixel.lng}`}>
-                  Pixel at ({pixel.lat.toFixed(4)}, {pixel.lng.toFixed(4)}) - {pixel.color}
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <div className="card">
+            <p>Total Pixels Placed: {userStats.totalPixelsPlaced}</p>
+            <p>Total Unique Colors Used: {userStats.totalUniqueColors}</p>
+            <h3>Placed Pixels:</h3>
+            <ul>
+              {userStats.placedPixels.map((pixel, index) => (
+                <li key={index}>
+                  <Link to={`/?lat=${pixel.lat}&lng=${pixel.lng}`}>
+                    Pixel at ({pixel.lat.toFixed(4)}, {pixel.lng.toFixed(4)}) - {pixel.color}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
         </>
       )}
 
